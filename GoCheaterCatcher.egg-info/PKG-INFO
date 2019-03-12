@@ -1,0 +1,11 @@
+Metadata-Version: 1.2
+Name: GoCheaterCatcher
+Version: 0.1
+Summary: Analysis of .sgf with .asgf output for further analysis
+Home-page: https://github.com/IgorBS/GoCheaterCatcher
+Author: Igor Burnaevskiy
+Author-email: igor_bs@mail.ru
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=2.7

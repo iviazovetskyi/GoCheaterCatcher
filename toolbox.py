@@ -12,7 +12,7 @@ import time
 import ConfigParser
 from Tkconstants import *
 import urllib2
-from Tkinter import *
+#from Tkinter import *
 
 class GRPException(Exception):
     def __init__(self, msg):

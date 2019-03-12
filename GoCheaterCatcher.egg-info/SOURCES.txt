@@ -1,0 +1,7 @@
+setup.py
+GoCheaterCatcher/__init__.py
+GoCheaterCatcher.egg-info/PKG-INFO
+GoCheaterCatcher.egg-info/SOURCES.txt
+GoCheaterCatcher.egg-info/dependency_links.txt
+GoCheaterCatcher.egg-info/not-zip-safe
+GoCheaterCatcher.egg-info/top_level.txt

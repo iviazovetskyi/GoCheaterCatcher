@@ -5,7 +5,7 @@ import subprocess
 import sys
 import threading
 import Queue
-from time import sleep
+#from time import sleep
 from toolbox import log, GRPException
 
 
