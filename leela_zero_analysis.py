@@ -2,12 +2,10 @@
 from __future__ import unicode_literals
 
 from gtp import gtp
-import sys
-from Tkinter import *
 from time import sleep
-import threading
+import ntpath
+import subprocess
 from toolbox import *
-# from toolbox import _
 
 
 class LeelaZeroAnalysis():
@@ -181,16 +179,6 @@ def leela_zero_starting_procedure(sgf_g, profile, silentfail=False):
 class RunAnalysis(LeelaZeroAnalysis, RunAnalysisBase):
     def __init__(self, filename, move_range, intervals, variation, komi, profile, playouts, threads):
         RunAnalysisBase.__init__(self, filename, move_range, intervals, variation, komi, profile, playouts, threads)
-
-
-# class LiveAnalysis(LeelaZeroAnalysis, LiveAnalysisBase):
-#     def __init__(self, g, filename, profile):
-#         LiveAnalysisBase.__init__(self, g, filename, profile)
-
-
-import ntpath
-import subprocess
-import Queue
 
 
 class Position(dict):
@@ -384,12 +372,11 @@ class Leela_Zero_gtp(gtp):
         return position_evaluation
 
 
-from leela_analysis import LeelaSettings
-
-
-class LeelaZeroSettings(LeelaSettings):
+class LeelaZeroSettings():
     def __init__(self, parent, bot="LeelaZero"):
-        LeelaSettings.__init__(self, parent, bot)
+        self.parent = parent
+        self.bot = bot
+        self.profiles = get_bot_profiles(bot, False)
         self.bot_gtp = Leela_Zero_gtp
 
 

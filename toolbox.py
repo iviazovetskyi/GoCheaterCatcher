@@ -500,39 +500,59 @@ grp_config = MyConfig(config_file)
 
 
 class MasterAnalyze():
-    def __init__(self, dir, start_move):
-        self.filenames = [os.path.join(dir, file) for file in os.listdir(dir) if file.endswith(".sgf")]
+    def __init__(self, sgfs, start_move, profiles, game_id=None, force=False):
+        # SGFs variable can be either directory with SGF files or a single .sgf file
+        if os.path.isdir(sgfs):
+            self.filenames = [os.path.join(sgfs, f) for f in os.listdir(sgfs) if f.endswith(".sgf")]
+        elif os.path.isfile(sgfs):
+            self.filenames = [sgfs]
+        self.sgf_dir = os.path.dirname(os.path.abspath(self.filenames[0]))
         self.start_move = start_move
         self.StopAtFirstResign = True
-        self.playouts = 10000
-        self.threads = 4
+        self.profiles = profiles.split(",")
+        if game_id is None:
+            self.game_id = ""
+        else:
+            self.game_id = game_id
+        self.force = force
+
+        self.bots = []
+        for bot in get_available():
+            if str(bot["profile"]) in profiles:
+                self.bots.append(bot)
 
     def start(self):
         for filename in self.filenames:
-            #while process_exists('leelaz.exe'):  # dirty hack, see for better options
-            #    time.sleep(5)
             g = open_sgf(filename)
             move_zero = g.get_root()
             nb_moves = get_moves_number(move_zero)
             komi = g.get_komi()
-
             intervals = "all moves (both colors)"
             move_selection = range(nb_moves)
-            self.bot = get_available()[0]
-            print self.bot
-            if os.path.exists(filename + "_{0}.asgf".format(self.bot["name"])):
-                pass
-            else:
-                # self.bot['runanalysis']((filename, filename + "_{0}.asgf".format(self.bot["name"])),
-                #         move_selection[self.start_move:], intervals, 0, komi, {self.bot['name'] + " - " + self.bot['profile']}, self.playouts, self.threads)
-                self.bot['runanalysis']((filename, filename + "_{0}.asgf".format(self.bot["name"])),
-                        move_selection[self.start_move:], intervals, 0, komi, self.bot, self.playouts, self.threads)
+
+            for bot in self.bots:
+                parameters = bot["parameters"].split("--")
+                playouts = int(str([par.split(" ")[1] for par in parameters if par.startswith("visits")])[3:-2])
+                threads = int(str([par.split(" ")[1] for par in parameters if par.startswith("threads")])[3:-2])
+                filename_base = os.path.splitext(os.path.basename(filename))[0]
+                dir_path = os.path.dirname(filename) + "\{0}_{1}\\".format(bot["name"], bot["profile"])
+                try:
+                    os.makedirs(dir_path)
+                except OSError:
+                    print "Can't create directory: " + dir_path
+                output_filename = dir_path + "{0}_{1}.asgf".format(self.game_id, filename_base)
+
+                if os.path.exists(output_filename) and not self.force:
+                    log("{0} already exists, and --force wasn't used. Skipping...".format(output_filename))
+                    continue
+                bot['runanalysis']((filename, output_filename),
+                                   move_selection[self.start_move:], intervals, 0, komi, bot, playouts, threads)
 
 
-class RunAnalysisBase():
+class RunAnalysisBase:
     def __init__(self, filenames, move_range, intervals, variation, komi, profile, playouts, threads):
         self.filename = filenames[0]
-        self.rsgf_filename = filenames[1]
+        self.asgf_filename = filenames[1]
         self.move_range = move_range
         self.update_queue = Queue.Queue(1)
         self.intervals = intervals
@@ -555,11 +575,10 @@ class RunAnalysisBase():
             self.max_move = get_moves_number(self.move_zero)
 
             leaves = get_all_sgf_leaves(self.g.get_root())
-            log("keeping only variation", self.variation)
+            log("keeping only main variation", self.variation)
             keep_only_one_leaf(leaves[self.variation][0])
 
             size = self.g.get_size()
-            log("size of the tree:", size)
             self.size = size
 
             log("Setting new komi")
@@ -569,6 +588,7 @@ class RunAnalysisBase():
             self.abort()
             return
 
+        self.bot = self.initialize_bot()
         try:
             self.bot = self.initialize_bot()
         except Exception, e:
@@ -583,7 +603,7 @@ class RunAnalysisBase():
         self.stop_at_first_resign = True
         self.completed = False
 
-        # threading.Thread(target=self.run_all_analysis).start()  # multithread disabled
+        # threading.Thread(target=self.run_all_analysis).start()  # multithread disabled, it's more efficent to compute 1 game with N cores compared to N games with 1 core
         self.run_all_analysis()
 
 
@@ -603,7 +623,7 @@ class RunAnalysisBase():
     def run_all_analysis(self):
         self.current_move = 1
 
-        f = file(str(self.rsgf_filename), 'a')
+        f = file(str(self.asgf_filename), 'a')
         f.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
         lost_percent = 0
         previous_best = 47
@@ -803,7 +823,6 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
                 (_("%s did not reply as expected to the GTP version command:") % bot_name) + "\n" + unicode(e))
 
         log("Version: " + bot_version)
-        log("Setting goban size as " + str(size) + "x" + str(size))
         try:
             ok = bot.boardsize(size)
         except:
@@ -813,7 +832,6 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
         if not ok:
             raise GRPException(_("%s rejected this board size (%ix%i)") % (bot_name, size, size))
 
-        log("Clearing the board")
         bot.reset()
 
         log("Checking for existing stones or handicap stones on the board")
@@ -1110,7 +1128,7 @@ def get_bot_profiles(bot="", withcommand=True):
     if bot != "":
         bots = [bot]
     else:
-        bots = ["Leela", "GnuGo", "Ray", "AQ", "LeelaZero", "Pachi", "PhoenixGo"]
+        bots = ["LeelaZero"]
     profiles = []
     for section in sections:
         for bot in bots:
@@ -1127,134 +1145,134 @@ def get_bot_profiles(bot="", withcommand=True):
 
     return profiles
 
-
-class BotProfiles(Frame):
-    def __init__(self, parent, bot):
-        Frame.__init__(self, parent)
-        self.parent = parent
-        self.bot = bot
-        self.profiles = get_bot_profiles(bot, False)
-        profiles_frame = self
-
-        self.listbox = Listbox(profiles_frame)
-        self.listbox.grid(column=10, row=10, rowspan=10)
-        self.update_listbox()
-
-        row = 10
-        Label(profiles_frame, text=_("Profile")).grid(row=row, column=11, sticky=W)
-        self.profile = StringVar()
-        Entry(profiles_frame, textvariable=self.profile, width=30).grid(row=row, column=12)
-
-        row += 1
-        Label(profiles_frame, text=_("Command")).grid(row=row, column=11, sticky=W)
-        self.command = StringVar()
-        Entry(profiles_frame, textvariable=self.command, width=30).grid(row=row, column=12)
-
-        row += 1
-        Label(profiles_frame, text=_("Parameters")).grid(row=row, column=11, sticky=W)
-        self.parameters = StringVar()
-        Entry(profiles_frame, textvariable=self.parameters, width=30).grid(row=row, column=12)
-
-        row += 10
-        buttons_frame = Frame(profiles_frame)
-        buttons_frame.grid(row=row, column=10, sticky=W, columnspan=3)
-        Button(buttons_frame, text=_("Add profile"), command=self.add_profile).grid(row=row, column=1, sticky=W)
-        Button(buttons_frame, text=_("Modify profile"), command=self.modify_profile).grid(row=row, column=2, sticky=W)
-        Button(buttons_frame, text=_("Delete profile"), command=self.delete_profile).grid(row=row, column=3, sticky=W)
-        Button(buttons_frame, text=_("Test"),
-               command=lambda: self.parent.parent.test(self.bot_gtp, self.command, self.parameters)).grid(row=row,
-                                                                                                          column=4,
-                                                                                                          sticky=W)
-        self.listbox.bind("<Button-1>", lambda e: self.after(100, self.change_selection))
-
-        self.index = -1
-
-    def clear_selection(self):
-        self.index = -1
-        self.profile.set("")
-        self.command.set("")
-        self.parameters.set("")
-
-    def change_selection(self):
-        try:
-            index = self.listbox.curselection()[0]
-            self.index = index
-            log("Profile", index, "selected")
-        except:
-            log("No selection")
-            self.clear_selection()
-            return
-        data = self.profiles[index]
-        self.profile.set(data["profile"])
-        self.command.set(data["command"])
-        self.parameters.set(data["parameters"])
-
-    def empty_profiles(self):
-        profiles = self.profiles
-        sections = grp_config.get_sections()
-        for bot in [profile["bot"] for profile in profiles]:
-            for section in sections:
-                if bot + "-" in section:
-                    grp_config.remove_section(section)
-        self.update_listbox()
-
-    def create_profiles(self):
-        profiles = self.profiles
-        p = 0
-        for profile in profiles:
-            bot = profile["bot"]
-            for key, value in profile.items():
-                if key != "bot":
-                    grp_config.add_entry(bot + "-" + str(p), key, value)
-            p += 1
-        self.update_listbox()
-
-    def add_profile(self):
-        profiles = self.profiles
-        if self.profile.get() == "":
-            return
-        data = {"bot": self.bot}
-        data["profile"] = self.profile.get()
-        data["command"] = self.command.get()
-        data["parameters"] = self.parameters.get()
-        self.empty_profiles()
-        profiles.append(data)
-        self.create_profiles()
-        self.clear_selection()
-
-    def modify_profile(self):
-        profiles = self.profiles
-        if self.profile.get() == "":
-            return
-
-        if self.index < 0:
-            log("No selection")
-            return
-        index = self.index
-
-        profiles[index]["profile"] = self.profile.get()
-        profiles[index]["command"] = self.command.get()
-        profiles[index]["parameters"] = self.parameters.get()
-
-        self.empty_profiles()
-        self.create_profiles()
-        self.clear_selection()
-
-    def delete_profile(self):
-        profiles = self.profiles
-
-        if self.index < 0:
-            log("No selection")
-            return
-        index = self.index
-
-        self.empty_profiles()
-        del profiles[index]
-        self.create_profiles()
-        self.clear_selection()
-
-    def update_listbox(self):
-        profiles = self.profiles
-        self.listbox.delete(0, END)
-        for item in [profile["bot"] + " - " + profile["profile"] for profile in profiles]:
-            self.listbox.insert(END, item)
+#
+# class BotProfiles(Frame):
+#     def __init__(self, parent, bot):
+#         Frame.__init__(self, parent)
+#         self.parent = parent
+#         self.bot = bot
+#         self.profiles = get_bot_profiles(bot, False)
+#         profiles_frame = self
+#
+#         self.listbox = Listbox(profiles_frame)
+#         self.listbox.grid(column=10, row=10, rowspan=10)
+#         self.update_listbox()
+#
+#         row = 10
+#         Label(profiles_frame, text=_("Profile")).grid(row=row, column=11, sticky=W)
+#         self.profile = StringVar()
+#         Entry(profiles_frame, textvariable=self.profile, width=30).grid(row=row, column=12)
+#
+#         row += 1
+#         Label(profiles_frame, text=_("Command")).grid(row=row, column=11, sticky=W)
+#         self.command = StringVar()
+#         Entry(profiles_frame, textvariable=self.command, width=30).grid(row=row, column=12)
+#
+#         row += 1
+#         Label(profiles_frame, text=_("Parameters")).grid(row=row, column=11, sticky=W)
+#         self.parameters = StringVar()
+#         Entry(profiles_frame, textvariable=self.parameters, width=30).grid(row=row, column=12)
+#
+#         row += 10
+#         buttons_frame = Frame(profiles_frame)
+#         buttons_frame.grid(row=row, column=10, sticky=W, columnspan=3)
+#         Button(buttons_frame, text=_("Add profile"), command=self.add_profile).grid(row=row, column=1, sticky=W)
+#         Button(buttons_frame, text=_("Modify profile"), command=self.modify_profile).grid(row=row, column=2, sticky=W)
+#         Button(buttons_frame, text=_("Delete profile"), command=self.delete_profile).grid(row=row, column=3, sticky=W)
+#         Button(buttons_frame, text=_("Test"),
+#                command=lambda: self.parent.parent.test(self.bot_gtp, self.command, self.parameters)).grid(row=row,
+#                                                                                                           column=4,
+#                                                                                                           sticky=W)
+#         self.listbox.bind("<Button-1>", lambda e: self.after(100, self.change_selection))
+#
+#         self.index = -1
+#
+#     def clear_selection(self):
+#         self.index = -1
+#         self.profile.set("")
+#         self.command.set("")
+#         self.parameters.set("")
+#
+#     def change_selection(self):
+#         try:
+#             index = self.listbox.curselection()[0]
+#             self.index = index
+#             log("Profile", index, "selected")
+#         except:
+#             log("No selection")
+#             self.clear_selection()
+#             return
+#         data = self.profiles[index]
+#         self.profile.set(data["profile"])
+#         self.command.set(data["command"])
+#         self.parameters.set(data["parameters"])
+#
+#     def empty_profiles(self):
+#         profiles = self.profiles
+#         sections = grp_config.get_sections()
+#         for bot in [profile["bot"] for profile in profiles]:
+#             for section in sections:
+#                 if bot + "-" in section:
+#                     grp_config.remove_section(section)
+#         self.update_listbox()
+#
+#     def create_profiles(self):
+#         profiles = self.profiles
+#         p = 0
+#         for profile in profiles:
+#             bot = profile["bot"]
+#             for key, value in profile.items():
+#                 if key != "bot":
+#                     grp_config.add_entry(bot + "-" + str(p), key, value)
+#             p += 1
+#         self.update_listbox()
+#
+#     def add_profile(self):
+#         profiles = self.profiles
+#         if self.profile.get() == "":
+#             return
+#         data = {"bot": self.bot}
+#         data["profile"] = self.profile.get()
+#         data["command"] = self.command.get()
+#         data["parameters"] = self.parameters.get()
+#         self.empty_profiles()
+#         profiles.append(data)
+#         self.create_profiles()
+#         self.clear_selection()
+#
+#     def modify_profile(self):
+#         profiles = self.profiles
+#         if self.profile.get() == "":
+#             return
+#
+#         if self.index < 0:
+#             log("No selection")
+#             return
+#         index = self.index
+#
+#         profiles[index]["profile"] = self.profile.get()
+#         profiles[index]["command"] = self.command.get()
+#         profiles[index]["parameters"] = self.parameters.get()
+#
+#         self.empty_profiles()
+#         self.create_profiles()
+#         self.clear_selection()
+#
+#     def delete_profile(self):
+#         profiles = self.profiles
+#
+#         if self.index < 0:
+#             log("No selection")
+#             return
+#         index = self.index
+#
+#         self.empty_profiles()
+#         del profiles[index]
+#         self.create_profiles()
+#         self.clear_selection()
+#
+#     def update_listbox(self):
+#         profiles = self.profiles
+#         self.listbox.delete(0, END)
+#         for item in [profile["bot"] + " - " + profile["profile"] for profile in profiles]:
+#             self.listbox.insert(END, item)

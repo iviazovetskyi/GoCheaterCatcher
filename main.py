@@ -9,12 +9,24 @@ def params():
     """get options from console"""
     usage = "usage: %prog directory bot threads/gpu [options]"
     parser = OptionParser(usage=usage)
-    parser.add_option("-d", "--directory",
+    parser.add_option("--directory",
                       action="store", type="string", dest="sgf_directory", default=None,
-                      help="Указание директории с .sgf-файлами. Данные, собранные во время анализа этих партий будут являться рефернсными")
-    parser.add_option("-s", "--start_move",
+                      help="Directory with sgf-files to analysis, doesn't stack with --file")
+    parser.add_option("--file",
+                      action="store", type="string", dest="sgf_file", default=None,
+                      help="Sgf-file to analyze, doesn't stack with --directory")
+    parser.add_option("--start_move",
                       action="store", type="int", dest="start_move", default=20,
-                      help="Указание хода, с которого будет осуществлен анализ, по умолчанию 20")
+                      help="Move from which analysis would be done")
+    parser.add_option("--force",
+                      action="store_true", dest="force", default=False,
+                      help="Force to re-compute sgf(s)")
+    parser.add_option("--game_id",
+                      action="store", type="string", dest="game_id", default=None,
+                      help="Game_id of sgf-file")
+    parser.add_option("--profiles",
+                      action="store", type="string", dest="profiles", default="10k",
+                      help="Enter profiles, in a comma-separated way. E.g. 10k, 5k, 2k, ...")
     # parser.add_option("-f", "--file",
     #                   action="store", type="string", dest="sgf_file", default=None,
     #                   help="Указание .sgf-файла, который будет анализироваться и сопоставляться с рефернсными данными")
@@ -44,20 +56,36 @@ def params():
 def main():
     options, args = params()
     dir = options.sgf_directory
+    file = options.sgf_file
     start_move = options.start_move
+    game_id = options.game_id
+    force = options.force
+    profiles = options.profiles
+
     # visits = options.visits
     # threads = options.threads
     # gpu = options.gpu
     if dir is not None:
-        if os.path.exists(dir) == False:
-            log("dir doesn't exists")
+        if not os.path.exists(dir):
+            log("Directory with sgf doesn't exist. Quit now")
             sys.exit()
         else:
-            leela = MasterAnalyze(dir, start_move)
+            leela = MasterAnalyze(dir, start_move, profiles, game_id, force)
             leela.start()
+    elif file is not None:
+        if not os.path.exists(file):
+            log("Sgf-file doesn't exist. Quit now")
+            sys.exit()
+        else:
+            leela = MasterAnalyze(file, start_move, profiles, game_id, force)
+            leela.start()
+    else:
+        log("Sgf-file or directory with sgf-files wasn't specified. Quit now")
+        sys.exit()
 
-def start(dir, start_move):
-    MasterAnalyze(dir, start_move)
+
+def start(sgfs, start_move, profiles, game_id=None, force=False):
+    MasterAnalyze(sgfs, start_move, profiles, game_id, force)
 
 if __name__ == '__main__':
     main()
