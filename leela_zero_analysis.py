@@ -177,8 +177,8 @@ def leela_zero_starting_procedure(sgf_g, profile, silentfail=False):
 
 
 class RunAnalysis(LeelaZeroAnalysis, RunAnalysisBase):
-    def __init__(self, filename, move_range, intervals, variation, komi, profile, playouts, threads):
-        RunAnalysisBase.__init__(self, filename, move_range, intervals, variation, komi, profile, playouts, threads)
+    def __init__(self, filename, move_range, intervals, variation, komi, profile):
+        RunAnalysisBase.__init__(self, filename, move_range, intervals, variation, komi, profile)
 
 
 class Position(dict):

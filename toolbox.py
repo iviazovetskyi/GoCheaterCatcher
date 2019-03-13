@@ -531,9 +531,22 @@ class MasterAnalyze():
             move_selection = range(nb_moves)
 
             for bot in self.bots:
-                parameters = bot["parameters"].split("--")
-                playouts = int(str([par.split(" ")[1] for par in parameters if par.startswith("visits")])[3:-2])
-                threads = int(str([par.split(" ")[1] for par in parameters if par.startswith("threads")])[3:-2])
+                # parameters = bot["parameters"].split("--")
+                # playouts = 10000
+                # threads = 4
+                # gpu = []
+                # try:
+                #     for par in parameters:
+                #         if par.startswith("visits"):
+                #             playouts = int(str(par.split(" ")[1].strip()))
+                #         if par.startswith("threads"):
+                #             threads = int(str(par.split(" ")[1].strip()))
+                #         if par.startswith("gpu"):
+                #             gpu.append(int(str(par.split(" ")[1].strip())))
+                #     print playouts, threads, gpu
+                # except ValueError:
+                #     print "Can't parse parameters from config.ini"
+                #     sys.exit()
                 filename_base = os.path.splitext(os.path.basename(filename))[0]
                 dir_path = os.path.dirname(filename) + "\{0}_{1}\\".format(bot["name"], bot["profile"])
                 try:
@@ -546,11 +559,11 @@ class MasterAnalyze():
                     log("{0} already exists, and --force wasn't used. Skipping...".format(output_filename))
                     continue
                 bot['runanalysis']((filename, output_filename),
-                                   move_selection[self.start_move:], intervals, 0, komi, bot, playouts, threads)
+                                   move_selection[self.start_move:], intervals, 0, komi, bot)
 
 
 class RunAnalysisBase:
-    def __init__(self, filenames, move_range, intervals, variation, komi, profile, playouts, threads):
+    def __init__(self, filenames, move_range, intervals, variation, komi, profile):
         self.filename = filenames[0]
         self.asgf_filename = filenames[1]
         self.move_range = move_range
@@ -559,8 +572,9 @@ class RunAnalysisBase:
         self.variation = variation
         self.komi = komi
         self.profile = profile
-        self.playouts = playouts
-        self.threads = threads
+        # self.playouts = playouts
+        # self.threads = threads
+        # self.gpu = gpu
         self.g = None
         self.move_zero = None
         self.current_move = None
