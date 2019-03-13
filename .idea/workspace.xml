@@ -99,7 +99,7 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="212">
+            <state relative-caret-position="238">
               <caret line="14" column="31" lean-forward="true" selection-start-line="14" selection-start-column="31" selection-end-line="14" selection-end-column="31" />
               <folding>
                 <element signature="e#24#63#0" expanded="true" />
@@ -108,11 +108,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="toolbox.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="toolbox.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/toolbox.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="382">
-              <caret line="943" column="0" lean-forward="true" selection-start-line="943" selection-start-column="0" selection-end-line="943" selection-end-column="0" />
+            <state relative-caret-position="1079">
+              <caret line="942" column="16" lean-forward="true" selection-start-line="942" selection-start-column="16" selection-end-line="942" selection-end-column="16" />
               <folding />
             </state>
           </provider>
@@ -121,11 +121,21 @@
       <file leaf-file-name="leela_zero_analysis.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/leela_zero_analysis.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="180" column="80" lean-forward="false" selection-start-line="180" selection-start-column="80" selection-end-line="180" selection-end-column="80" />
+            <state relative-caret-position="208">
+              <caret line="324" column="35" lean-forward="false" selection-start-line="324" selection-start-column="35" selection-end-line="324" selection-end-column="35" />
               <folding>
                 <element signature="e#24#63#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="gtp_terminal.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/gtp_terminal.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="208">
+              <caret line="18" column="42" lean-forward="false" selection-start-line="18" selection-start-column="42" selection-end-line="18" selection-end-column="42" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -171,9 +181,9 @@
       <find>GRPException(_</find>
       <find>GRPException((_</find>
       <find>GRPException</find>
-      <find>grp</find>
       <find>GoRev</find>
       <find>part</find>
+      <find>grp</find>
     </findStrings>
     <replaceStrings>
       <replace>GRPException(</replace>
@@ -192,8 +202,8 @@
         <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/config.ini" />
-        <option value="$PROJECT_DIR$/leela_zero_analysis.py" />
         <option value="$PROJECT_DIR$/toolbox.py" />
+        <option value="$PROJECT_DIR$/leela_zero_analysis.py" />
       </list>
     </option>
   </component>
@@ -548,16 +558,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="212">
-          <caret line="14" column="31" lean-forward="true" selection-start-line="14" selection-start-column="31" selection-end-line="14" selection-end-column="31" />
-          <folding>
-            <element signature="e#24#63#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/config.ini">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
@@ -566,20 +566,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leela_zero_analysis.py">
+    <entry file="file://$PROJECT_DIR$/toolbox.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="180" column="80" lean-forward="false" selection-start-line="180" selection-start-column="80" selection-end-line="180" selection-end-column="80" />
+        <state relative-caret-position="1079">
+          <caret line="942" column="16" lean-forward="true" selection-start-line="942" selection-start-column="16" selection-end-line="942" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="31" lean-forward="true" selection-start-line="14" selection-start-column="31" selection-end-line="14" selection-end-column="31" />
           <folding>
             <element signature="e#24#63#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/toolbox.py">
+    <entry file="file://$PROJECT_DIR$/leela_zero_analysis.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="382">
-          <caret line="943" column="0" lean-forward="true" selection-start-line="943" selection-start-column="0" selection-end-line="943" selection-end-column="0" />
+        <state relative-caret-position="208">
+          <caret line="324" column="35" lean-forward="false" selection-start-line="324" selection-start-column="35" selection-end-line="324" selection-end-column="35" />
+          <folding>
+            <element signature="e#24#63#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gtp_terminal.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="18" column="42" lean-forward="false" selection-start-line="18" selection-start-column="42" selection-end-line="18" selection-end-column="42" />
           <folding />
         </state>
       </provider>

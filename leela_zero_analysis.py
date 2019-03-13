@@ -322,7 +322,7 @@ class Leela_Zero_gtp(gtp):
         try:
             return answer.split(" ")[1]
         except:
-            raise GRPException("GRPException in Get_leela_zero_final_score()")
+            raise GCCException("GCCException in Get_leela_zero_final_score()")
 
     def get_all_leela_zero_moves(self):
         buff = []
