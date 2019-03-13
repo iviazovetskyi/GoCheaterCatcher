@@ -175,12 +175,12 @@ def write_sgf(filename, sgf_content):
         filelock.release()
         log("Could not save the SGF file", filename)
         log("=>", e.errno, e.strerror)
-        raise GRPException(_("Could not save the RSGF file: ") + filename + "\n" + e.strerror)
+        raise GRPException(("Could not save the RSGF file: ") + filename + "\n" + e.strerror)
     except Exception, e:
         filelock.release()
         log("Could not save the RSGF file", filename)
         log("=>", e)
-        raise GRPException(_("Could not save the SGF file: ") + filename + "\n" + unicode(e))
+        raise GRPException(("Could not save the SGF file: ") + filename + "\n" + unicode(e))
 
 
 def convert_sgf_to_utf(content):
@@ -229,7 +229,7 @@ def open_sgf(filename):
         filelock.release()
         log("Could not open the SGF file", filename)
         log("=>", e.errno, e.strerror)
-        raise GRPException(_("Could not open the RSGF file: ") + filename + "\n" + e.strerror)
+        raise GRPException(("Could not open the RSGF file: ") + filename + "\n" + e.strerror)
     except Exception, e:
         log("Could not open the SGF file", filename)
         log("=>", e)
@@ -237,7 +237,7 @@ def open_sgf(filename):
             filelock.release()
         except:
             pass
-        raise GRPException(_("Could not open the SGF file: ") + filename + "\n" + unicode(e))
+        raise GRPException(("Could not open the SGF file: ") + filename + "\n" + unicode(e))
 
 
 def clean_sgf(txt):
@@ -809,22 +809,18 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
             bot_command_line = [command_entry] + parameters_entry.split()
             bot = bot_gtp(bot_command_line)
         except Exception, e:
-            raise GRPException((_(
-                "Could not run %s using the command from config.ini file:") % bot_name) + "\n" + command_entry + " " + parameters_entry + "\n" + unicode(
-                e))
+            raise GRPException("Could not run %s using the command from config.ini file:" % bot_name)
 
         log(bot_name + " started")
         log(bot_name + " identification through GTP...")
         try:
             answer = bot.name()
         except Exception, e:
-            raise GRPException(
-                (_("%s did not reply as expected to the GTP name command:") % bot_name) + "\n" + unicode(e))
+            raise GRPException("%s did not reply as expected to the GTP name command:" % bot_name)
 
         if bot_gtp_name != 'GtpBot':
             if answer != bot_gtp_name:
-                raise GRPException((_(
-                    "%s did not identify itself as expected:") % bot_name) + "\n'" + bot_gtp_name + "' != '" + answer + "'")
+                raise GRPException("%s did not identify itself as expected:" % bot_name)
         else:
             bot_gtp_name = answer
 
@@ -833,18 +829,16 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
         try:
             bot_version = bot.version()
         except Exception, e:
-            raise GRPException(
-                (_("%s did not reply as expected to the GTP version command:") % bot_name) + "\n" + unicode(e))
+            raise GRPException("%s did not reply as expected to the GTP version command:" % bot_name)
 
         log("Version: " + bot_version)
         try:
             ok = bot.boardsize(size)
         except:
-            raise GRPException((_(
-                "Could not set the goboard size using GTP command. Check that %s is running in GTP mode.") % bot_name))
+            raise GRPException("Could not set the goboard size using GTP command. Check that %s is running in GTP mode." % bot_name)
 
         if not ok:
-            raise GRPException(_("%s rejected this board size (%ix%i)") % (bot_name, size, size))
+            raise GRPException("%s rejected this board size (%ix%i)" % (bot_name, size, size))
 
         bot.reset()
 
