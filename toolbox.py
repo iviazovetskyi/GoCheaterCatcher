@@ -14,7 +14,7 @@ from Tkconstants import *
 import urllib2
 #from Tkinter import *
 
-class GRPException(Exception):
+class GCCException(Exception):
     def __init__(self, msg):
         if type(msg) == type(u"abc"):
             self.utf_msg = msg
@@ -112,7 +112,7 @@ def gtp2ij(move):
         letters = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
         return int(move[1:]) - 1, letters.index(move[0])
     except:
-        raise GRPException("Cannot convert GTP coordinates " + str(move) + " to grid coordinates!")
+        raise GCCException("Cannot convert GTP coordinates " + str(move) + " to grid coordinates!")
 
 
 def ij2gtp(m):
@@ -124,7 +124,7 @@ def ij2gtp(m):
         letters = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
         return letters[j] + str(i + 1)
     except:
-        raise GRPException("Cannot convert grid coordinates " + str(m) + " to GTP coordinates!")
+        raise GCCException("Cannot convert grid coordinates " + str(m) + " to GTP coordinates!")
 
 
 def sgf2ij(m):
@@ -145,7 +145,7 @@ def ij2sgf(m):
         letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't']
         return letters[j] + letters[i]
     except:
-        raise GRPException("Cannot convert grid coordinates " + str(m) + " to SGF coordinates!")
+        raise GCCException("Cannot convert grid coordinates " + str(m) + " to SGF coordinates!")
 
 filelock = threading.Lock()
 c = 0
@@ -175,12 +175,12 @@ def write_sgf(filename, sgf_content):
         filelock.release()
         log("Could not save the SGF file", filename)
         log("=>", e.errno, e.strerror)
-        raise GRPException(("Could not save the RSGF file: ") + filename + "\n" + e.strerror)
+        raise GCCException(("Could not save the RSGF file: ") + filename + "\n" + e.strerror)
     except Exception, e:
         filelock.release()
         log("Could not save the RSGF file", filename)
         log("=>", e)
-        raise GRPException(("Could not save the SGF file: ") + filename + "\n" + unicode(e))
+        raise GCCException(("Could not save the SGF file: ") + filename + "\n" + unicode(e))
 
 
 def convert_sgf_to_utf(content):
@@ -229,7 +229,7 @@ def open_sgf(filename):
         filelock.release()
         log("Could not open the SGF file", filename)
         log("=>", e.errno, e.strerror)
-        raise GRPException(("Could not open the RSGF file: ") + filename + "\n" + e.strerror)
+        raise GCCException(("Could not open the RSGF file: ") + filename + "\n" + e.strerror)
     except Exception, e:
         log("Could not open the SGF file", filename)
         log("=>", e)
@@ -237,19 +237,14 @@ def open_sgf(filename):
             filelock.release()
         except:
             pass
-        raise GRPException(("Could not open the SGF file: ") + filename + "\n" + unicode(e))
+        raise GCCException(("Could not open the SGF file: ") + filename + "\n" + unicode(e))
 
 
 def clean_sgf(txt):
     # txt is still of type str here....
-
-    # https://github.com/pnprog/goreviewpartner/issues/56
     txt = txt.replace(str(";B[  ])"), str(";B[])")).replace(str(";W[  ])"), str(";W[])"))
-
-    # https://github.com/pnprog/goreviewpartner/issues/71
     txt = txt.replace(str("KM[]"), str(""))
     txt = txt.replace(str("B[**];"), str("B[];")).replace(str("W[**];"), str("W[];"))
-
     return txt
 
 
@@ -344,7 +339,7 @@ try:
 except:
     pathname = os.path.dirname(__file__)
 
-log('GRP path:', os.path.abspath(pathname))
+log('GCC path:', os.path.abspath(pathname))
 config_file = os.path.join(os.path.abspath(pathname), "config.ini")
 log('Config file:', config_file)
 
@@ -496,7 +491,7 @@ class MyConfig():
         return result
 
 
-grp_config = MyConfig(config_file)
+gcc_config = MyConfig(config_file)
 
 
 class MasterAnalyze():
@@ -805,22 +800,22 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
 
         log("Starting " + bot_name + "...")
         try:
-            # bot_command_line=[grp_config.get(bot_name, command_entry)]+grp_config.get(bot_name, parameters_entry).split()
+            # bot_command_line=[gcc_config.get(bot_name, command_entry)]+gcc_config.get(bot_name, parameters_entry).split()
             bot_command_line = [command_entry] + parameters_entry.split()
             bot = bot_gtp(bot_command_line)
         except Exception, e:
-            raise GRPException("Could not run %s using the command from config.ini file:" % bot_name)
+            raise GCCException("Could not run %s using the command from config.ini file:" % bot_name)
 
         log(bot_name + " started")
         log(bot_name + " identification through GTP...")
         try:
             answer = bot.name()
         except Exception, e:
-            raise GRPException("%s did not reply as expected to the GTP name command:" % bot_name)
+            raise GCCException("%s did not reply as expected to the GTP name command:" % bot_name)
 
         if bot_gtp_name != 'GtpBot':
             if answer != bot_gtp_name:
-                raise GRPException("%s did not identify itself as expected:" % bot_name)
+                raise GCCException("%s did not identify itself as expected:" % bot_name)
         else:
             bot_gtp_name = answer
 
@@ -829,16 +824,16 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
         try:
             bot_version = bot.version()
         except Exception, e:
-            raise GRPException("%s did not reply as expected to the GTP version command:" % bot_name)
+            raise GCCException("%s did not reply as expected to the GTP version command:" % bot_name)
 
         log("Version: " + bot_version)
         try:
             ok = bot.boardsize(size)
         except:
-            raise GRPException("Could not set the goboard size using GTP command. Check that %s is running in GTP mode." % bot_name)
+            raise GCCException("Could not set the goboard size using GTP command. Check that %s is running in GTP mode." % bot_name)
 
         if not ok:
-            raise GRPException("%s rejected this board size (%ix%i)" % (bot_name, size, size))
+            raise GCCException("%s rejected this board size (%ix%i)" % (bot_name, size, size))
 
         bot.reset()
 
@@ -1000,7 +995,7 @@ def get_available():
 
 
 def get_bot_profiles(bot="", withcommand=True):
-    sections = grp_config.get_sections()
+    sections = gcc_config.get_sections()
     if bot != "":
         bots = [bot]
     else:
@@ -1009,13 +1004,13 @@ def get_bot_profiles(bot="", withcommand=True):
     for section in sections:
         for bot in bots:
             if bot + "-" in section:
-                command = grp_config.get(section, "command")
+                command = gcc_config.get(section, "command")
                 if (not command) and (withcommand == True):
                     continue
                 data = {"bot": bot, "command": "", "parameters": "", "timepermove": "", "variations": "4",
                         "deepness": "4"}
-                for option in grp_config.get_options(section):
-                    value = grp_config.get(section, option)
+                for option in gcc_config.get_options(section):
+                    value = gcc_config.get(section, option)
                     data[option] = value
                 profiles.append(data)
 
