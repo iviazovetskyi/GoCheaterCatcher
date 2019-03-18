@@ -495,7 +495,7 @@ gcc_config = MyConfig(config_file)
 
 
 class MasterAnalyze():
-    def __init__(self, sgfs, start_move, profiles, game_id=None, force=False):
+    def __init__(self, sgfs, start_move, profiles, output=None, force=False):
         # SGFs variable can be either directory with SGF files or a single .sgf file
         if os.path.isdir(sgfs):
             self.filenames = [os.path.join(sgfs, f) for f in os.listdir(sgfs) if f.endswith(".sgf")]
@@ -505,10 +505,7 @@ class MasterAnalyze():
         self.start_move = start_move
         self.StopAtFirstResign = True
         self.profiles = profiles.split(",")
-        if game_id is None:
-            self.game_id = ""
-        else:
-            self.game_id = game_id
+        self.output = output
         self.force = force
 
         self.bots = []
@@ -524,35 +521,22 @@ class MasterAnalyze():
             komi = g.get_komi()
             intervals = "all moves (both colors)"
             move_selection = range(nb_moves)
+            filename_base = os.path.splitext(os.path.basename(filename))[0]
 
             for bot in self.bots:
-                # parameters = bot["parameters"].split("--")
-                # playouts = 10000
-                # threads = 4
-                # gpu = []
-                # try:
-                #     for par in parameters:
-                #         if par.startswith("visits"):
-                #             playouts = int(str(par.split(" ")[1].strip()))
-                #         if par.startswith("threads"):
-                #             threads = int(str(par.split(" ")[1].strip()))
-                #         if par.startswith("gpu"):
-                #             gpu.append(int(str(par.split(" ")[1].strip())))
-                #     print playouts, threads, gpu
-                # except ValueError:
-                #     print "Can't parse parameters from config.ini"
-                #     sys.exit()
-                filename_base = os.path.splitext(os.path.basename(filename))[0]
                 dir_path = os.path.dirname(filename) + "\{0}_{1}\\".format(bot["name"], bot["profile"])
                 try:
                     os.makedirs(dir_path)
                 except OSError:
                     print "Can't create directory: " + dir_path
-                output_filename = dir_path + "{0}_{1}.asgf".format(self.game_id, filename_base)
+                output_filename = dir_path + filename_base + ".asgf"
 
                 if os.path.exists(output_filename) and not self.force:
                     log("{0} already exists, and --force wasn't used. Skipping...".format(output_filename))
                     continue
+
+                if self.output is not None:
+                    output_filename = self.output
                 bot['runanalysis']((filename, output_filename),
                                    move_selection[self.start_move:], intervals, 0, komi, bot)
 
@@ -671,13 +655,13 @@ class RunAnalysisBase:
                 previous_best = current_best
                 if self.current_move > self.move_range[0]:
                     if self.current_move % 2 == 1:
-                        f.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
+                        f.write('Move #{0}, made by w: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
                             str(self.current_move - 1),
                             str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
                             str(lost_percent), str(previous_position_evaluation)))
                         f.flush()
                     else:
-                        f.write('Move #{0}, made by w: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
+                        f.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
                             str(self.current_move - 1),
                             str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
                             str(lost_percent), str(previous_position_evaluation)))

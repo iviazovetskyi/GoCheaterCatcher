@@ -5,11 +5,11 @@ import subprocess
 import sys
 import threading
 import Queue
-#from time import sleep
-from toolbox import log, GRPException
+from time import sleep
+from toolbox import log, GCCException
 
 
-class gtp():
+class GTP:
     def __init__(self, command):
         self.c = 1
         self.command_line = command[0] + " " + " ".join(command[1:])
@@ -22,7 +22,7 @@ class gtp():
         self.free_handicap_stones = []
         self.history = []
 
-    ####low level function####
+    # low level function
     def consume_stderr(self):
         while 1:
             try:
@@ -68,7 +68,7 @@ class gtp():
             answer = self.process.stdout.readline().decode("utf-8")
         return answer
 
-    ####hight level function####
+    # high level functions
     def boardsize(self, size=19):
         self.size = size
         self.write("boardsize " + str(size))
@@ -121,7 +121,7 @@ class gtp():
             self.history.append(["b", move])
             return move
         except Exception, e:
-            raise GRPException("GRPException in genmove_black()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in genmove_black()\nanswer='" + answer + "'\n" + unicode(e))
 
     def play_white(self):
         self.write("genmove white")
@@ -131,7 +131,7 @@ class gtp():
             self.history.append(["w", move])
             return move
         except Exception, e:
-            raise GRPException("GRPException in genmove_white()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in genmove_white()\nanswer='" + answer + "'\n" + unicode(e))
 
     def undo(self):
         self.reset()
@@ -152,7 +152,7 @@ class gtp():
                         return False
             return True
         except Exception, e:
-            raise GRPException("GRPException in undo()\n" + unicode(e))
+            raise GCCException("GCCException in undo()\n" + unicode(e))
 
     def place(self, move, color):
         if color == 1:
@@ -166,7 +166,7 @@ class gtp():
         try:
             return " ".join(answer.split(" ")[1:])
         except Exception, e:
-            raise GRPException("GRPException in name()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in name()\nanswer='" + answer + "'\n" + unicode(e))
 
     def version(self):
         self.write("version")
@@ -174,7 +174,7 @@ class gtp():
         try:
             return answer.split(" ")[1]
         except Exception, e:
-            raise GRPException("GRPException in version()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in version()\nanswer='" + answer + "'\n" + unicode(e))
 
     def set_free_handicap(self, positions):
         self.free_handicap_stones = positions[:]
@@ -189,7 +189,7 @@ class gtp():
             else:
                 return False
         except Exception, e:
-            raise GRPException("GRPException in set_free_handicap()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in set_free_handicap()\nanswer='" + answer + "'\n" + unicode(e))
 
     def undo_standard(self):
         self.write("undo")
@@ -200,7 +200,7 @@ class gtp():
             else:
                 return False
         except Exception, e:
-            raise GRPException("GRPException in undo()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in undo()\nanswer='" + answer + "'\n" + unicode(e))
 
     def countlib(self, move):
         self.write("countlib " + move)
@@ -229,7 +229,7 @@ class gtp():
             else:
                 return False
         except Exception, e:
-            raise GRPException("GRPException in set_time()\nanswer='" + answer + "'\n" + unicode(e))
+            raise GCCException("GCCException in set_time()\nanswer='" + answer + "'\n" + unicode(e))
 
     def quit(self):
         self.write("quit")
@@ -256,11 +256,9 @@ class gtp():
 
         try:
             self.process.kill()
-        except:
-            pass
-        try:
             self.process.stdin.close()
         except:
+            log("Something went wrong with process.kill")
             pass
 
     def close(self):

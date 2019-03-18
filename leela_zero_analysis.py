@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from gtp import gtp
+from gtp import GTP
 from time import sleep
 import ntpath
 import subprocess
@@ -190,7 +190,7 @@ class Variation(dict):
     pass
 
 
-class Leela_Zero_gtp(gtp):
+class Leela_Zero_gtp(GTP):
     def get_heatmap(self):
         while not self.stderr_queue.empty():
             self.stderr_queue.get()
