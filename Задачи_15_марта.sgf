@@ -1,0 +1,13 @@
+(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]
+RU[Japanese]SZ[19]KM[6.50]
+PW[Задачи]PB[15 марта]C[Везде ход черных!]
+;B[pd]
+;W[pe]
+(;AE[pd][pe]AW[gl][cm][em][hn][co][ho][gp][ip][cq][gq][iq][hr]AB[fo][go][io][jo][fp][hp][jp][fq][jq][fr][jr]C[1])
+(;AE[pd][pe]AW[dn][eo][fo][bp][cp][dp][fp][aq][gq][br][dr][gr][ds][es]AB[cm][dm][em][fm][ep][bq][cq][dq][eq][cr]C[2])
+(;AE[pd][pe]AW[en][fn][gn][eo][go][ap][bp][cp][dp][ep][gp][ip][aq][hq][hr][cs][es][gs][hs]AB[fo][fp][bq][cq][dq][eq][fq][gq][ar][fr][gr][bs][fs]C[3])
+(;AE[pd][pe]AW[rg][sg][ph][qh][qi][qj][sj][qk][ql][rl]AB[qf][rf][og][qg][oh][pj][pk][pl][sl][pm][qm][rm][ro]C[4])
+(;AE[pd][pe]AW[ai][bi][ci][cj][ck][dk][bl][dl][dm][an][dn][en][eo][dp][ep][aq][bq][cq][dq]AB[aj][bj][ak][cl][cm][bn][ao][co][ap][bp][cp]C[5])
+(;AE[pd][pe]AW[dn][bo][ep][hp][cq][dq][hq][cr]AB[dp][eq][gq][jq][dr][er]C[6])
+(;AE[pd][pe]AW[ck][dk][ek][cl][el][dm][dn][ao][bo][co]AB[bj][cj][dj][ej][fj][bk][fk][fl][em][fm][fo][bp][cp][dp][fq][br]C[7])
+(;AE[pd][pe]AW[cp][cq][dr]AB[cm][co][do][dq][eq][gq]C[8]))

@@ -518,6 +518,9 @@ class MasterAnalyze():
             g = open_sgf(filename)
             move_zero = g.get_root()
             nb_moves = get_moves_number(move_zero)
+            if self.start_move < nb_moves:
+                log("Start move < number of moves in sgf. Skipping...")
+                return 
             komi = g.get_komi()
             intervals = "all moves (both colors)"
             move_selection = range(nb_moves)
