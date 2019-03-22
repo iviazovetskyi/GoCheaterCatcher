@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
-from toolbox import *
 from optparse import OptionParser
+import os
+import toolbox
+import sys
 
 
 def params():
@@ -27,9 +28,12 @@ def params():
     parser.add_option("--output",
                       action="store", type="string", dest="output", default=None,
                       help="Enter output filename, better use .asgf extension")
+    parser.add_option("--verbose",
+                      action="store", type="int", dest="verbose", default=0,
+                      help="Reduces output data, max verbose level = 2")
     # parser.add_option("-f", "--file",
     #                   action="store", type="string", dest="sgf_file", default=None,
-    #                   help="Указание .sgf-файла, который будет анализироваться и сопоставляться с рефернсными данными")
+    #                   help="Указание .sgf, который будет анализироваться и сопоставляться с рефернсными данными")
     # parser.add_option("-r", "--reference",
     #                   action="store", type='string', dest='reference', default=None,
     #                   help="Указание файла с рефернсными данными, накопленынми раннее")
@@ -42,6 +46,7 @@ def params():
 
 
 def main():
+
     options, args = params()
     dir = options.sgf_directory
     file = options.sgf_file
@@ -49,27 +54,29 @@ def main():
     force = options.force
     profiles = options.profiles
     output = options.output
+    toolbox.verbose = options.verbose
+
     if dir is not None:
         if not os.path.exists(dir):
-            log("Directory with sgf doesn't exist. Quit now")
+            toolbox.log(1, "Directory with sgf doesn't exist. Quit now")
             sys.exit()
         else:
-            leela = MasterAnalyze(dir, start_move, profiles, output, force)
+            leela = toolbox.MasterAnalyze(dir, start_move, profiles, output, force)
             leela.start()
     elif file is not None:
         if not os.path.exists(file):
-            log("Sgf-file doesn't exist. Quit now")
+            toolbox.log(1, "Sgf-file doesn't exist. Quit now")
             sys.exit()
         else:
-            leela = MasterAnalyze(file, start_move, profiles, output, force)
+            leela = toolbox.MasterAnalyze(file, start_move, profiles, output, force)
             leela.start()
     else:
-        log("Sgf-file or directory with sgf-files wasn't specified. Quit now")
+        toolbox.log(1, "Sgf-file or directory with sgf-files wasn't specified. Quit now")
         sys.exit()
 
 
 def start(sgfs, start_move=20, profiles="10k", output=None, force=False):
-    MasterAnalyze(sgfs, start_move, profiles, output, force)
+    toolbox.MasterAnalyze(sgfs, start_move, profiles, output, force)
 
 if __name__ == '__main__':
     main()

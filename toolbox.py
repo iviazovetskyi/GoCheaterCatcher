@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from __future__ import unicode_literals
 from traceback import format_exc
 from gomill import sgf, sgf_moves
@@ -10,9 +11,10 @@ import sys
 import Queue
 import time
 import ConfigParser
-from Tkconstants import *
-import urllib2
-#from Tkinter import *
+
+
+verbose = 0
+
 
 class GCCException(Exception):
     def __init__(self, msg):
@@ -22,9 +24,9 @@ class GCCException(Exception):
         else:
             self.str_msg = msg
             self.utf_msg = msg.decode("utf-8", errors='replace')
-        log("===")
-        log(format_exc())
-        log("===")
+        log(1, "===")
+        log(1, format_exc())
+        log(1, "===")
         Exception.__init__(self, self.str_msg)
 
     def __unicode__(self):
@@ -40,47 +42,26 @@ def process_exists(process_name):
     return process_name in output
 
 
-def log(*args):
+def log(verbose_level, *args):
     global loglock
-    loglock.acquire()
-    encoding = sys.stdout.encoding
-    for arg in args:
-        try:
-            if type(arg) == type(str('abc')):
-                arg = arg.decode('utf-8', errors='replace')
-            elif type(arg) != type(u'abc'):
-                try:
-                    arg = str(arg)
-                except:
-                    arg = unicode(arg, errors='replace')
-                arg = arg.decode('utf-8', errors='replace')
-            arg = arg.encode(encoding, errors='replace')
-            print arg,
-        except:
-            print "?" * len(arg),
-    print
-    loglock.release()
-
-
-def linelog(*args):
-    global loglock
-    loglock.acquire()
-    encoding = sys.stdout.encoding
-    for arg in args:
-        try:
-            if type(arg) == type(str('abc')):
-                arg = arg.decode('utf-8', errors='replace')
-            elif type(arg) != type(u'abc'):
-                try:
-                    arg = str(arg)
-                except:
-                    arg = unicode(arg, errors='replace')
-                arg = arg.decode('utf-8', errors='replace')
-            arg = arg.encode(encoding, errors='replace')
-            print arg,
-        except:
-            print "?" * len(arg),
-    loglock.release()
+    if verbose_level <= verbose:
+        loglock.acquire()
+        encoding = sys.stdout.encoding
+        for arg in args:
+            try:
+                if type(arg) == type(str('abc')):
+                    arg = arg.decode('utf-8', errors='replace')
+                elif type(arg) != type(u'abc'):
+                    try:
+                        arg = str(arg)
+                    except:
+                        arg = unicode(arg, errors='replace')
+                    arg = arg.decode('utf-8', errors='replace')
+                arg = arg.encode(encoding, errors='replace')
+                print(arg)
+            except:
+                print ("?" * len(arg))
+        loglock.release()
 
 
 def get_moves_number(move_zero):
@@ -99,8 +80,8 @@ def go_to_move(move_zero, move_number=0):
     k = 0
     while k != move_number:
         if not move:
-            log("The end of the sgf tree was reached before getting to move_number", move_number)
-            log("Could only reach move_number", k)
+            log(1, "The end of the sgf tree was reached before getting to move_number", move_number)
+            log(1, "Could only reach move_number", k)
             return False
         move = move[0]
         k += 1
@@ -153,7 +134,7 @@ c = 0
 def write_sgf(filename, sgf_content):
     filelock.acquire()
     try:
-        log("Saving SGF file", filename)
+        log(1, "Saving SGF file", filename)
         if type(sgf_content) == type("abc"):
             content = sgf_content
         else:
@@ -173,13 +154,13 @@ def write_sgf(filename, sgf_content):
         filelock.release()
     except IOError, e:
         filelock.release()
-        log("Could not save the SGF file", filename)
-        log("=>", e.errno, e.strerror)
+        log(1, "Could not save the SGF file", filename)
+        log(1, "=>", e.errno, e.strerror)
         raise GCCException(("Could not save the RSGF file: ") + filename + "\n" + e.strerror)
     except Exception, e:
         filelock.release()
-        log("Could not save the RSGF file", filename)
-        log("=>", e)
+        log(1, "Could not save the RSGF file", filename)
+        log(1, "=>", e)
         raise GCCException(("Could not save the SGF file: ") + filename + "\n" + unicode(e))
 
 
@@ -193,8 +174,8 @@ def convert_sgf_to_utf(content):
             # the sgf is already in UTF, so we accept it directly
             return game
         else:
-            log("Encoding is", ca)
-            log("Converting from", ca, "to UTF-8")
+            log(2, "Encoding is", ca)
+            log(2, "Converting from", ca, "to UTF-8")
             encoding = (
                 codecs.lookup(ca).name.replace("_", "-").upper().replace("ISO8859", "ISO-8859"))  # from gomill code
             content = game.serialise()
@@ -204,7 +185,7 @@ def convert_sgf_to_utf(content):
                 content.encode("utf-8"))  # sgf.Sgf_game.from_string requires str object, not unicode
             return game
     else:
-        log("the sgf has no declared encoding, we will enforce UTF-8 encoding")
+        log(1, "the sgf has no declared encoding, we will enforce UTF-8 encoding")
         content = game.serialise()
         content = content.decode("utf", errors="replace").encode("utf")
         game = sgf.Sgf_game.from_string(content, override_encoding="UTF-8")
@@ -227,12 +208,12 @@ def open_sgf(filename):
         return game
     except IOError, e:
         filelock.release()
-        log("Could not open the SGF file", filename)
-        log("=>", e.errno, e.strerror)
+        log(1, "Could not open the SGF file", filename)
+        log(1, "=>", e.errno, e.strerror)
         raise GCCException(("Could not open the RSGF file: ") + filename + "\n" + e.strerror)
     except Exception, e:
-        log("Could not open the SGF file", filename)
-        log("=>", e)
+        log(1, "Could not open the SGF file", filename)
+        log(1, "=>", e)
         try:
             filelock.release()
         except:
@@ -267,7 +248,7 @@ def keep_only_one_leaf(leaf):
             parent = leaf.parent
             for other_leaf in parent:
                 if other_leaf != leaf:
-                    log("deleting...")
+                    log(1, "deleting...")
                     other_leaf.delete()
             leaf = parent
         except:
@@ -291,7 +272,7 @@ def check_selection(selection, nb_moves):
                 if a <= b and a > 0 and b <= nb_moves:
                     move_selection.extend(range(a, b + 1))
             except Exception, e:
-                print e
+                print(e)
                 return False
     move_selection = list(set(move_selection))
     move_selection = sorted(move_selection)
@@ -329,7 +310,7 @@ def module_path():
     even if we are frozen using py2exe"""
 
     if we_are_frozen():
-        log("Apparently running from the executable.")
+        log(1, "Apparently running from the executable.")
         return os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 
     return os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))
@@ -339,17 +320,17 @@ try:
 except:
     pathname = os.path.dirname(__file__)
 
-log('GCC path:', os.path.abspath(pathname))
+log(2, 'GCC path:', os.path.abspath(pathname))
 config_file = os.path.join(os.path.abspath(pathname), "config.ini")
-log('Config file:', config_file)
+log(2, 'Config file:', config_file)
 
 
-log("Checking availability of config file")
+log(2, "Checking availability of config file")
 conf = ConfigParser.ConfigParser()
 try:
     conf.readfp(codecs.open(config_file, "r", "utf-8"))
 except Exception, e:
-    log("Could not open the config file of Go Cheater Catcher" + "\n" + unicode(e))  # this cannot be translated
+    log(2, "Could not open the config file of Go Cheater Catcher" + "\n" + unicode(e))  # this cannot be translated
     sys.exit()
 
 
@@ -407,11 +388,11 @@ class MyConfig():
         if type(value) in (type(1), type(0.5), type(True)):
             value = unicode(value)
         if type(section) != type(u"abc"):
-            print section, "Warning: A non utf section string sent to my config:", section
+            print(section, "Warning: A non utf section string sent to my config:", section)
         if type(key) != type(u"abc"):
-            print key, "A non utf key string sent to my config:", key
+            print(key, "A non utf key string sent to my config:", key)
         if type(value) != type(u"abc"):
-            print value, "A non utf value string sent to my config:", value
+            print(value, "A non utf value string sent to my config:", value)
         section = unicode(section)
         key = unicode(key)
         value = unicode(value)
@@ -423,8 +404,8 @@ class MyConfig():
             value = self.config.get(section, key)
             value = value.decode("utf-8")
         except:
-            log("Could not read", str(section) + "/" + str(key), "from the config file")
-            log("Using default value")
+            log(3, "Could not read", str(section) + "/" + str(key), "from the config file")
+            log(3, "Using default value")
             value = self.default_values[section.lower()][key.lower()]
             self.add_entry(section, key, value)
         return value
@@ -433,8 +414,8 @@ class MyConfig():
         try:
             value = self.config.getint(section, key)
         except:
-            log("Could not read", str(section) + "/" + str(key), "from the config file")
-            log("Using default value")
+            log(3, "Could not read", str(section) + "/" + str(key), "from the config file")
+            log(3, "Using default value")
             value = self.default_values[section.lower()][key.lower()]
             self.add_entry(section, key, value)
             value = self.config.getint(section, key)
@@ -444,8 +425,8 @@ class MyConfig():
         try:
             value = self.config.getfloat(section, key)
         except:
-            log("Could not read", str(section) + "/" + str(key), "from the config file")
-            log("Using default value")
+            log(3, "Could not read", str(section) + "/" + str(key), "from the config file")
+            log(3, "Using default value")
             value = self.default_values[section.lower()][key.lower()]
             self.add_entry(section, key, value)
             value = self.config.getfloat(section, key)
@@ -455,8 +436,8 @@ class MyConfig():
         try:
             value = self.config.getboolean(section, key)
         except:
-            log("Could not read", str(section) + "/" + str(key), "from the config file")
-            log("Using default value")
+            log(3, "Could not read", str(section) + "/" + str(key), "from the config file")
+            log(3, "Using default value")
             value = self.default_values[section.lower()][key.lower()]
             self.add_entry(section, key, value)
             value = self.config.getboolean(section, key)
@@ -473,9 +454,9 @@ class MyConfig():
         key = key.encode("utf-8")
         value = value.encode("utf-8")
         if not self.config.has_section(section):
-            log("Adding section", section, "in config file")
+            log(3, "Adding section", section, "in config file")
             self.config.add_section(section)
-        log("Setting", section, "/", key, "in the config file")
+        log(3, "Setting", section, "/", key, "in the config file")
         self.config.set(section, key, value)
         self.config.write(open(self.config_file, "w"))
 
@@ -518,8 +499,8 @@ class MasterAnalyze():
             g = open_sgf(filename)
             move_zero = g.get_root()
             nb_moves = get_moves_number(move_zero)
-            if self.start_move < nb_moves:
-                log("Start move < number of moves in sgf. Skipping...")
+            if self.start_move > nb_moves:
+                log(1, "Start move > number of moves in sgf. Skipping...")
                 return 
             komi = g.get_komi()
             intervals = "all moves (both colors)"
@@ -531,11 +512,11 @@ class MasterAnalyze():
                 try:
                     os.makedirs(dir_path)
                 except OSError:
-                    print "Can't create directory: " + dir_path
+                    log(1, "Can't create directory: ", dir_path)
                 output_filename = dir_path + filename_base + ".asgf"
 
                 if os.path.exists(output_filename) and not self.force:
-                    log("{0} already exists, and --force wasn't used. Skipping...".format(output_filename))
+                    log(1, "{0} already exists, and --force wasn't used. Skipping...".format(output_filename))
                     continue
 
                 if self.output is not None:
@@ -571,20 +552,19 @@ class RunAnalysisBase:
             self.max_move = get_moves_number(self.move_zero)
 
             leaves = get_all_sgf_leaves(self.g.get_root())
-            log("keeping only main variation", self.variation)
+            log(1, "keeping only main variation", self.variation)
             keep_only_one_leaf(leaves[self.variation][0])
 
             size = self.g.get_size()
             self.size = size
 
-            log("Setting new komi")
+            log(1, "Setting new komi")
             node_set(self.g.get_root(), "KM", self.komi)
         except Exception, e:
             self.error = unicode(e)
             self.abort()
             return
 
-        self.bot = self.initialize_bot()
         try:
             self.bot = self.initialize_bot()
         except Exception, e:
@@ -607,8 +587,8 @@ class RunAnalysisBase:
         pass
 
     def run_analysis(self, current_move):
-        log("Analysis of move", current_move)
-        log("Analysis for this move is completed")
+        log(1, "Analysis of move", current_move)
+        log(1, "Analysis for this move is completed")
 
     def play(self, gtp_color, gtp_move):
         if gtp_color == 'w':
@@ -633,19 +613,20 @@ class RunAnalysisBase:
         while self.current_move <= self.max_move:
             answer = ""
             if self.current_move in self.move_range:
+                log(0, "Analysing move {0}/{1}".format(self.current_move, self.max_move))
                 parent = go_to_move(self.move_zero, self.current_move - 1)
                 if len(parent) > 1:
-                    log("Removing existing", len(parent) - 1, "variations")
+                    log(1, "Removing existing", len(parent) - 1, "variations")
                     for other_leaf in parent[1:]:
                         other_leaf.delete()
                 answer, next_moves, position_evaluation = self.run_analysis(self.current_move)
 
                 self.total_done += 1
 
-                log("For this position,", self.bot.bot_name, "would play:", answer)
-                log("Analysis for this move is completed")
+                log(1, "For this position,", self.bot.bot_name, "would play:", answer)
+                log(1, "Analysis for this move is completed")
             elif self.move_range:
-                log("Move", self.current_move, "not in the list of moves to be analysed, skipping")
+                log(1, "Move", self.current_move, "not in the list of moves to be analysed, skipping")
 
             if self.current_move in self.move_range:
                 game_move = go_to_move(self.move_zero, self.current_move).get_move()[1]
@@ -686,19 +667,19 @@ class RunAnalysisBase:
                                 child.delete()
 
             if answer == "RESIGN":
-                log("")
-                log("The analysis will stop now")
-                log("")
+                log(1, "")
+                log(1, "The analysis will stop now")
+                log(1, "")
                 self.move_range = []
             # the bot has proposed to resign, and resign_at_first_stop is ON
             elif self.move_range:
                 one_move = go_to_move(self.move_zero, self.current_move)
                 player_color, player_move = one_move.get_move()
                 if player_color in ('w', "W"):
-                    log("now asking " + self.bot.bot_name + " to play the game move: white at", ij2gtp(player_move))
+                    log(2, "now asking " + self.bot.bot_name + " to play the game move: white at", ij2gtp(player_move))
                     self.play('w', ij2gtp(player_move))
                 else:
-                    log("now asking " + self.bot.bot_name + " to play the game move: black at", ij2gtp(player_move))
+                    log(2, "now asking " + self.bot.bot_name + " to play the game move: black at", ij2gtp(player_move))
                     self.play('b', ij2gtp(player_move))
 
             self.current_move += 1
@@ -711,13 +692,13 @@ class RunAnalysisBase:
 
     def terminate_bot(self):
         try:
-            log("killing", self.bot.bot_name)
+            log(1, "killing", self.bot.bot_name)
             self.bot.close()
         except Exception, e:
-            log(e)
+            log(0, e)
 
     def close(self):
-        log("RunAnalysis closed")
+        log(1, "RunAnalysis closed")
         self.completed = True
 
 
@@ -738,8 +719,8 @@ class BotOpenMove():
             else:
                 self.okbot = False
         except Exception, e:
-            log("Could not launch " + self.name)
-            log(e)
+            log(0, "Could not launch " + self.name)
+            log(0, e)
             self.okbot = False
         return
 
@@ -758,25 +739,25 @@ class BotOpenMove():
         return self.bot.quick_evaluation(color)
 
     def click(self, color):
-        log(self.name, "play")
+        log(1, self.name, "play")
         n0 = time.time()
         if color == 1:
             move = self.bot.play_black()
         else:
             move = self.bot.play_white()
-        log("move=", move, "in", time.time() - n0, "s")
+        log(1, "move=", move, "in", time.time() - n0, "s")
         return move
 
     def close(self):
         if self.okbot:
-            log("killing", self.name)
+            log(0, "killing", self.name)
             self.bot.close()
 
 
 def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, silentfail=False):
-    log("Bot starting procedure started with profile =", profile["profile"])
-    log("\tbot name:", bot_name)
-    log("\tbot gtp name", bot_gtp_name)
+    log(1, "Bot starting procedure started with profile =", profile["profile"])
+    log(1, "\tbot name:", bot_name)
+    log(1, "\tbot gtp name", bot_gtp_name)
 
     command_entry = profile["command"]
     parameters_entry = profile["parameters"]
@@ -785,7 +766,7 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
 
     try:
 
-        log("Starting " + bot_name + "...")
+        log(1, "Starting " + bot_name + "...")
         try:
             # bot_command_line=[gcc_config.get(bot_name, command_entry)]+gcc_config.get(bot_name, parameters_entry).split()
             bot_command_line = [command_entry] + parameters_entry.split()
@@ -793,8 +774,8 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
         except Exception, e:
             raise GCCException("Could not run %s using the command from config.ini file:" % bot_name)
 
-        log(bot_name + " started")
-        log(bot_name + " identification through GTP...")
+        log(1, bot_name + " started")
+        log(1, bot_name + " identification through GTP...")
         try:
             answer = bot.name()
         except Exception, e:
@@ -806,14 +787,14 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
         else:
             bot_gtp_name = answer
 
-        log(bot_name + " identified itself properly")
-        log("Checking version through GTP...")
+        log(1, bot_name + " identified itself properly")
+        log(1, "Checking version through GTP...")
         try:
             bot_version = bot.version()
         except Exception, e:
             raise GCCException("%s did not reply as expected to the GTP version command:" % bot_name)
 
-        log("Version: " + bot_version)
+        log(1, "Version: " + bot_version)
         try:
             ok = bot.boardsize(size)
         except:
@@ -824,18 +805,18 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
 
         bot.reset()
 
-        log("Checking for existing stones or handicap stones on the board")
+        log(1, "Checking for existing stones or handicap stones on the board")
         gameroot = sgf_g.get_root()
         if node_has(gameroot, "HA"):
             nb_handicap = node_get(gameroot, "HA")
-            log("The SGF indicates", nb_handicap, "stone(s)")
+            log(1, "The SGF indicates", nb_handicap, "stone(s)")
         else:
             nb_handicap = 0
-            log("The SGF does not indicate handicap stone")
+            log(1, "The SGF does not indicate handicap stone")
         # import pdb; pdb.set_trace()
         board, unused = sgf_moves.get_setup_and_moves(sgf_g)
         nb_occupied_points = len(board.list_occupied_points())
-        log("The SGF indicates", nb_occupied_points, "occupied point(s)")
+        log(1, "The SGF indicates", nb_occupied_points, "occupied point(s)")
 
         free_handicap_black_stones_positions = []
         already_played_black_stones_position = []
@@ -855,29 +836,29 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
                     already_played_white_stones_position.append(move)
 
         if len(free_handicap_black_stones_positions) > 0:
-            log("Setting handicap stones at", " ".join(free_handicap_black_stones_positions))
+            log(1, "Setting handicap stones at", " ".join(free_handicap_black_stones_positions))
             bot.set_free_handicap(free_handicap_black_stones_positions)
 
         for stone in already_played_black_stones_position:
-            log("Adding a black stone at", stone)
+            log(1, "Adding a black stone at", stone)
             bot.place_black(stone)
 
         for stone in already_played_white_stones_position:
-            log("Adding a white stone at", stone)
+            log(1, "Adding a white stone at", stone)
             bot.place_white(stone)
 
-        log("Setting komi at", sgf_g.get_komi())
+        log(1, "Setting komi at", sgf_g.get_komi())
         bot.komi(sgf_g.get_komi())
 
-        log(bot_name + " initialization completed")
+        log(1, bot_name + " initialization completed")
 
         bot.bot_name = bot_gtp_name
         bot.bot_version = bot_version
     except Exception, e:
         if silentfail:
-            log(e)
+            log(0, e)
         else:
-            log(unicode(e))
+            log(0, unicode(e))
         return False
     return bot
 

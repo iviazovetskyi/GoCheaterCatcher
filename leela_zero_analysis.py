@@ -14,16 +14,16 @@ class LeelaZeroAnalysis():
         player_color = guess_color_to_play(self.move_zero, current_move)
 
         leela_zero = self.leela_zero
-        log()
-        log("==============")
-        log("move", str(current_move))
+        log(1, )
+        log(1, "==============")
+        log(1, "move", str(current_move))
 
         # additional_comments=""
         if player_color in ('w', "W"):
-            log("leela Zero play white")
+            log(1, "leela Zero play white")
             answer = leela_zero.play_white()
         else:
-            log("leela Zero play black")
+            log(1, "leela Zero play black")
             answer = leela_zero.play_black()
 
         if current_move > 1:
@@ -50,7 +50,7 @@ class LeelaZeroAnalysis():
             first_sequence = position_evaluation['variations'][0]['sequence']
             new_sequence = first_sequence
             while len(new_sequence.split()) <= 1 and nb_undos <= 5:
-                log("first, let's ask leela zero for the next move")
+                log(1, "first, let's ask leela zero for the next move")
                 if player_color in ('w', "W") and nb_undos % 2 == 0:
                     answer = leela_zero.play_white()
                 elif player_color in ('w', "W") and nb_undos % 2 == 1:
@@ -83,7 +83,7 @@ class LeelaZeroAnalysis():
                 leela_zero.undo()
 
         best_move = True
-        log("Number of alternative sequences:", len(position_evaluation['variations']))
+        log(1, "Number of alternative sequences:", len(position_evaluation['variations']))
         for variation in position_evaluation['variations'][:self.maxvariations]:
             # exemple: {'value network win rate': '50.22%', 'policy network value': '17.37%', 'sequence': 'Q16 D4 D17 Q4', 'playouts': '13', 'first move': 'Q16'}
             previous_move = one_move.parent
@@ -91,7 +91,7 @@ class LeelaZeroAnalysis():
             first_variation_move = True
             for one_deep_move in variation['sequence'].split(' '):
                 if one_deep_move in ["PASS", "RESIGN"]:
-                    log("Leaving the variation when encountering", one_deep_move)
+                    log(2, "Leaving the variation when encountering", one_deep_move)
                     break
 
                 i, j = gtp2ij(one_deep_move)
@@ -129,7 +129,7 @@ class LeelaZeroAnalysis():
                     current_color = 'b'
                 else:
                     current_color = 'w'
-        log("==== no more sequences =====")
+        log(2, "==== no more sequences =====")
 
         try:
             max_reading_depth = position_evaluation['max reading depth']
@@ -139,7 +139,7 @@ class LeelaZeroAnalysis():
         except:
             pass
 
-        log("==== creating heat map =====")
+        log(2, "==== creating heat map =====")
         raw_heat_map = leela_zero.get_heatmap()
         heat_map = ""
         for i in range(self.size):
@@ -171,7 +171,7 @@ def leela_zero_starting_procedure(sgf_g, profile, silentfail=False):
                 log("Setting time per move")
                 leela_zero.set_time(main_time=0, byo_yomi_time=time_per_move, byo_yomi_stones=1)
     except:
-        log("Wrong value for Leela Zero thinking time:", time_per_move)
+        log(1, "Wrong value for Leela Zero thinking time:", time_per_move)
 
     return leela_zero
 
@@ -249,7 +249,7 @@ class Leela_Zero_gtp(GTP):
         command = [c.encode(sys.getfilesystemencoding()) for c in command]
         leela_zero_working_directory = leela_zero_working_directory.encode(sys.getfilesystemencoding())
         if leela_zero_working_directory:
-            log("Leela Zero working directory:", leela_zero_working_directory)
+            log(1, "Leela Zero working directory:", leela_zero_working_directory)
             self.process = subprocess.Popen(command, cwd=leela_zero_working_directory, stdin=subprocess.PIPE,
                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
@@ -263,7 +263,7 @@ class Leela_Zero_gtp(GTP):
 
         threading.Thread(target=self.consume_stderr).start()
 
-        log("Checking Leela Zero stderr to check for OpenCL SGEMM tuner running")
+        log(1, "Checking Leela Zero stderr to check for OpenCL SGEMM tuner running")
         delay = 60
         while 1:
             try:
@@ -271,27 +271,27 @@ class Leela_Zero_gtp(GTP):
 
                 delay = 10
                 if "Started OpenCL SGEMM tuner." in err_line:
-                    log("OpenCL SGEMM tuner is running")
-                    log(_(
+                    log(2, "OpenCL SGEMM tuner is running")
+                    log(2, _(
                         "Leela Zero is currently running the OpenCL SGEMM tuner. It may take several minutes until Leela Zero is ready."))
                     break
                 elif "Loaded existing SGEMM tuning.\n" in err_line:
-                    log("OpenCL SGEMM tuner has already been runned")
+                    log(2, "OpenCL SGEMM tuner has already been runned")
                     break
                 elif "Could not open weights file" in err_line:
-                    log(err_line.strip())
+                    log(0, err_line.strip())
                     break
                 elif "A network weights file is required to use the program." in err_line:
-                    log(err_line.strip())
+                    log(0, err_line.strip())
                     break
                 elif "Weights file is the wrong version." in err_line:
-                    log(err_line.strip())
+                    log(0, err_line.strip())
                     break
                 elif "BLAS Core:" in err_line:
-                    log("Could not find out, abandoning")
+                    log(1, "Could not find out, abandoning")
                     break
             except:
-                log("Could not find out, abandoning")
+                log(0, "Could not find out, abandoning")
                 break
 
         self.free_handicap_stones = []
@@ -309,11 +309,11 @@ class Leela_Zero_gtp(GTP):
                         # no need to keep all those log in memory, so there is a limit at 100 lines
                         pass
                 else:
-                    log("leaving consume_stderr thread")
+                    log(1, "leaving consume_stderr thread")
                     return
             except Exception, e:
-                log("leaving consume_stderr thread due to exception:")
-                log(e)
+                log(0, "leaving consume_stderr thread due to exception:")
+                log(0, e)
                 return
 
     def get_leela_zero_final_score(self):
