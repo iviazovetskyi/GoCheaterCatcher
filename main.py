@@ -17,8 +17,8 @@ def params():
                       action="store", type="string", dest="sgf_file", default=None,
                       help="Sgf-file to analyze, doesn't stack with --directory")
     parser.add_option("--start_move",
-                      action="store", type="int", dest="start_move", default=20,
-                      help="Move from which analysis would be done. Default is 20")
+                      action="store", type="int", dest="start_move", default=1,
+                      help="Move from which analysis would be done. Default is 1")
     parser.add_option("--force",
                       action="store_true", dest="force", default=False,
                       help="Force to re-compute sgf(s). Default is false")
