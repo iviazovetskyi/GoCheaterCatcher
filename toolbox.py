@@ -484,7 +484,6 @@ class MasterAnalyze():
             self.filenames = [sgfs]
         self.sgf_dir = os.path.dirname(os.path.abspath(self.filenames[0]))
         self.start_move = start_move
-        self.StopAtFirstResign = True
         self.profiles = profiles.split(",")
         self.output = output
         self.force = force
@@ -585,7 +584,7 @@ class RunAnalysisBase:
             return
 
         self.total_done = 0
-        self.stop_at_first_resign = True
+        self.stop_at_first_resign = False
         self.completed = False
 
         # threading.Thread(target=self.run_all_analysis).start()  # multithread disabled, it's more efficent to compute 1 game with N cores compared to N games with 1 core
@@ -684,13 +683,13 @@ class RunAnalysisBase:
                             for child in parent[1:]:
                                 child.delete()
 
-            if answer == "RESIGN":
-                log(1, "")
-                log(1, "The analysis will stop now")
-                log(1, "")
-                self.move_range = []
+            # if answer == "RESIGN":
+            #     log(1, "")
+            #     log(1, "The analysis will stop now")
+            #     log(1, "")
+            #     self.move_range = []
             # the bot has proposed to resign, and resign_at_first_stop is ON
-            elif self.move_range:
+            if self.move_range:
                 one_move = go_to_move(self.move_zero, self.current_move)
                 player_color, player_move = one_move.get_move()
                 if player_color in ('w', "W"):
@@ -703,10 +702,12 @@ class RunAnalysisBase:
             self.current_move += 1
 
         f.close()
+        self.terminate_bot()
+        self.close()
         return True
 
     def abort(self):
-        log("Leaving follow_anlysis()")
+        log(1, "Leaving follow_anlysis()")
 
     def terminate_bot(self):
         try:
