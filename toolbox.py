@@ -513,14 +513,15 @@ class MasterAnalyze():
                     os.makedirs(dir_path)
                 except OSError:
                     log(1, "Can't create directory: ", dir_path)
-                output_filename = dir_path + filename_base + ".asgf"
+
+                if self.output is not None:
+                    output_filename = self.output
+                else:
+                    output_filename = dir_path + filename_base + ".asgf"
 
                 if os.path.exists(output_filename) and not self.force and not self.append:
                     log(1, "{0} already exists, and --force wasn't used and --no-append was used. Skipping...".format(output_filename))
                     continue
-
-                if self.output is not None:
-                    output_filename = self.output
 
                 if self.append:
                     if os.path.exists(output_filename):
@@ -528,8 +529,13 @@ class MasterAnalyze():
                             contents = f.readlines()
                             if "Move #" in contents[-1]:
                                 self.start_move = int(contents[-1].split("#")[1].split(",")[0]) + 1
+                else:
+                    if self.force and os.path.exists(output_filename):
+                        f = open(output_filename, 'r+')
+                        f.truncate(0)  # need '0' when using r+
+                        f.close()
 
-                bot['runanalysis']((filename, output_filename),
+                bot['runanalysis']((filename, output_filename, dir_path + filename_base + ".asgf"),
                                    move_selection[self.start_move:], intervals, 0, komi, bot)
 
 
@@ -537,6 +543,7 @@ class RunAnalysisBase:
     def __init__(self, filenames, move_range, intervals, variation, komi, profile):
         self.filename = filenames[0]
         self.asgf_filename = filenames[1]
+        self.asgf_filename_profiled = filenames[2]
         self.move_range = move_range
         self.update_queue = Queue.Queue(1)
         self.intervals = intervals
@@ -616,8 +623,10 @@ class RunAnalysisBase:
             f.close()
 
         f = file(str(self.asgf_filename), 'a')
+        fp = file(str(self.asgf_filename_profiled), 'a')
         if not skip:
             f.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
+            fp.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
         lost_percent = 0
         previous_best = 47
         position_evaluation = dict()
@@ -661,12 +670,22 @@ class RunAnalysisBase:
                             str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
                             str(lost_percent), str(previous_position_evaluation)))
                         f.flush()
+                        fp.write('Move #{0}, made by w: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
+                            str(self.current_move - 1),
+                            str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
+                            str(lost_percent), str(previous_position_evaluation)))
+                        fp.flush()
                     else:
                         f.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
                             str(self.current_move - 1),
                             str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
                             str(lost_percent), str(previous_position_evaluation)))
                         f.flush()
+                        fp.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
+                            str(self.current_move - 1),
+                            str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
+                            str(lost_percent), str(previous_position_evaluation)))
+                        fp.flush()
 
                 previous_position_evaluation = position_evaluation
                 wrs = [pos['value network win rate'] for pos in position_evaluation['variations']]
@@ -702,6 +721,7 @@ class RunAnalysisBase:
             self.current_move += 1
 
         f.close()
+        fp.close()
         self.terminate_bot()
         self.close()
         return True
