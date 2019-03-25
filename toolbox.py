@@ -476,7 +476,7 @@ gcc_config = MyConfig(config_file)
 
 
 class MasterAnalyze():
-    def __init__(self, sgfs, start_move, profiles, output=None, force=False):
+    def __init__(self, sgfs, start_move, profiles, output=None, force=False, append=True):
         # SGFs variable can be either directory with SGF files or a single .sgf file
         if os.path.isdir(sgfs):
             self.filenames = [os.path.join(sgfs, f) for f in os.listdir(sgfs) if f.endswith(".sgf")]
@@ -488,6 +488,7 @@ class MasterAnalyze():
         self.profiles = profiles.split(",")
         self.output = output
         self.force = force
+        self.append = append
 
         self.bots = []
         for bot in get_available():
@@ -515,12 +516,20 @@ class MasterAnalyze():
                     log(1, "Can't create directory: ", dir_path)
                 output_filename = dir_path + filename_base + ".asgf"
 
-                if os.path.exists(output_filename) and not self.force:
-                    log(1, "{0} already exists, and --force wasn't used. Skipping...".format(output_filename))
+                if os.path.exists(output_filename) and not self.force and not self.append:
+                    log(1, "{0} already exists, and --force wasn't used and --no-append was used. Skipping...".format(output_filename))
                     continue
 
                 if self.output is not None:
                     output_filename = self.output
+
+                if self.append:
+                    if os.path.exists(output_filename):
+                        with open(output_filename, 'r') as f:
+                            contents = f.readlines()
+                            if "Move #" in contents[-1]:
+                                self.start_move = int(contents[-1].split("#")[1].split(",")[0]) + 1
+
                 bot['runanalysis']((filename, output_filename),
                                    move_selection[self.start_move:], intervals, 0, komi, bot)
 
@@ -599,8 +608,17 @@ class RunAnalysisBase:
     def run_all_analysis(self):
         self.current_move = 1
 
+        skip = False
+        if os.path.exists(self.asgf_filename):
+            with open(str(self.asgf_filename), 'r') as f:
+                contents = f.readlines()
+                if "Rank of white" in contents[0]:
+                    skip = True
+            f.close()
+
         f = file(str(self.asgf_filename), 'a')
-        f.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
+        if not skip:
+            f.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
         lost_percent = 0
         previous_best = 47
         position_evaluation = dict()
@@ -610,7 +628,7 @@ class RunAnalysisBase:
             previous_best = max([float(wr.strip(' \t\n\r%')) for wr in wrs])
             lost_percent = 0
 
-        while self.current_move <= self.max_move:
+        while self.current_move <= self.max_move - 1:
             answer = ""
             if self.current_move in self.move_range:
                 log(0, "Analysing move {0}/{1}".format(self.current_move, self.max_move))

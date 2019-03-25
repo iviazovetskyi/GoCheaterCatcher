@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from gtp import GTP
-from time import sleep
 import ntpath
 import subprocess
+from time import sleep
+
+from gtp import GTP
 from toolbox import *
 
 
@@ -85,7 +86,7 @@ class LeelaZeroAnalysis():
         best_move = True
         log(1, "Number of alternative sequences:", len(position_evaluation['variations']))
         for variation in position_evaluation['variations'][:self.maxvariations]:
-            # exemple: {'value network win rate': '50.22%', 'policy network value': '17.37%', 'sequence': 'Q16 D4 D17 Q4', 'playouts': '13', 'first move': 'Q16'}
+            # example: {'value network win rate': '50.22%', 'policy network value': '17.37%', 'sequence': 'Q16 D4 D17 Q4', 'playouts': '13', 'first move': 'Q16'}
             previous_move = one_move.parent
             current_color = player_color
             first_variation_move = True
@@ -158,6 +159,7 @@ class LeelaZeroAnalysis():
         self.leela_zero = leela_zero
         self.time_per_move = 0
         return leela_zero
+
 
 def leela_zero_starting_procedure(sgf_g, profile, silentfail=False):
     leela_zero = bot_starting_procedure("LeelaZero", "Leela Zero", Leela_Zero_gtp, sgf_g, profile, silentfail)
@@ -396,4 +398,3 @@ LeelaZero['settings'] = LeelaZeroSettings
 LeelaZero['gtp'] = Leela_Zero_gtp
 LeelaZero['runanalysis'] = RunAnalysis
 LeelaZero['starting'] = leela_zero_starting_procedure
-

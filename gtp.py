@@ -244,21 +244,21 @@ class GTP:
         while 1:
             self.quitting_thread.join(0.0)
             if not self.quitting_thread.is_alive():
-                log("The bot has quitted properly")
+                log(1, "The bot has quitted properly")
                 break
             elif t == 0:
-                log("The bot is still running...")
-                log("Forcefully closing it now!")
+                log(1, "The bot is still running...")
+                log(1, "Forcefully closing it now!")
                 break
             t -= 1
-            log("Waiting for the bot to close", t, "s")
+            log(1, "Waiting for the bot to close", t, "s")
             sleep(1)
 
         try:
             self.process.kill()
             self.process.stdin.close()
         except:
-            log("Something went wrong with process.kill")
+            log(1, "Something went wrong with process.kill")
             pass
 
     def close(self):

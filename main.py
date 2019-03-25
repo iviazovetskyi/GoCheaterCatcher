@@ -22,6 +22,9 @@ def params():
     parser.add_option("--force",
                       action="store_true", dest="force", default=False,
                       help="Force to re-compute sgf(s). Default is false")
+    parser.add_option("--no_append",
+                      action="store_false", dest="append", default=True,
+                      help="I.e. skipping if .asgf already exists, otherwise append to file, ignores start_move option")
     parser.add_option("--profiles",
                       action="store", type="string", dest="profiles", default="10k",
                       help="Enter profiles, in a comma-separated way. E.g. 10k, 5k, 2k, ... Default is 10k")
@@ -52,6 +55,7 @@ def main():
     file = options.sgf_file
     start_move = options.start_move
     force = options.force
+    append = options.append
     profiles = options.profiles
     output = options.output
     toolbox.verbose = options.verbose
@@ -61,22 +65,22 @@ def main():
             toolbox.log(1, "Directory with sgf doesn't exist. Quit now")
             sys.exit()
         else:
-            leela = toolbox.MasterAnalyze(dir, start_move, profiles, output, force)
+            leela = toolbox.MasterAnalyze(dir, start_move, profiles, output, force, append)
             leela.start()
     elif file is not None:
         if not os.path.exists(file):
             toolbox.log(1, "Sgf-file doesn't exist. Quit now")
             sys.exit()
         else:
-            leela = toolbox.MasterAnalyze(file, start_move, profiles, output, force)
+            leela = toolbox.MasterAnalyze(file, start_move, profiles, output, force, append)
             leela.start()
     else:
         toolbox.log(1, "Sgf-file or directory with sgf-files wasn't specified. Quit now")
         sys.exit()
 
 
-def start(sgfs, start_move=20, profiles="10k", output=None, force=False):
-    toolbox.MasterAnalyze(sgfs, start_move, profiles, output, force)
+def start(sgfs, start_move=20, profiles="10k", output=None, force=False, append=True):
+    toolbox.MasterAnalyze(sgfs, start_move, profiles, output, force, append)
 
 if __name__ == '__main__':
     main()
