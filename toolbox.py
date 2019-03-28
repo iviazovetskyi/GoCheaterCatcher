@@ -615,13 +615,15 @@ class RunAnalysisBase:
         self.current_move = 1
 
         skip = False
-        if os.path.exists(self.asgf_filename):
-            with open(str(self.asgf_filename), 'r') as f:
-                contents = f.readlines()
-                if "Rank of white" in contents[0]:
-                    skip = True
-            f.close()
-
+        try:
+            if os.path.exists(self.asgf_filename):
+                with open(str(self.asgf_filename), 'r') as f:
+                    contents = f.readlines()
+                    if "Rank of white" in contents[0]:
+                        skip = True
+                f.close()
+        except IndexError:
+            pass
         f = file(str(self.asgf_filename), 'a')
         fp = file(str(self.asgf_filename_profiled), 'a')
         if not skip:
