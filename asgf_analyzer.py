@@ -21,6 +21,13 @@ def get_intersection_sgfs(path_to_sgfs):
     return sgf_directories, united_sgf_list
 
 
+def get_asgfs(path_to_sgfs):
+    sgf_directories = [x[0] for x in walk(path_to_sgfs)]
+    united_sgf_list = [f for f in listdir(sgf_directories[0]) if isfile(join(sgf_directories[0], f))]
+    for dir in sgf_directories[1:]:
+        united_sgf_list = intersection(united_sgf_list, [f for f in listdir(dir) if isfile(join(dir, f))])
+    return sgf_directories, united_sgf_list
+
 
 # Move #20, made by b: Played at M6, -2.83% in WR.
 # All stats: {u'max reading depth': 32, u'variations':
@@ -67,6 +74,7 @@ class ASGFAnalyzer:
                 self.nb_moves = int(contents[-1].split("#")[1].split(",")[0])
         except IndexError:
             print (".asgf file is too short for analysis, quit now...")
+            print self.asgf
             sys.exit()
         f.close()
 
@@ -80,22 +88,25 @@ class ASGFAnalyzer:
 
         move_coordinates = move_data.split(",")[1][-3:].strip()  # coordinates with KGS style (skipping 'i' letter)
         move_winrate_drop = move_data.split(",")[2].split("%")[0].strip()
-        move_vatiations = move_data.split("All stats: ")[1].strip()
+        move_variations = move_data.split("All stats: ")[1].strip()
 
         # print move_data
         move = {"number"     : int(move_number),
                 "color"      : move_color,
                 "coordinates": move_coordinates,
                 "wr_drop"    : float(move_winrate_drop),
-                "variations" : ast.literal_eval(move_vatiations)["variations"]}
-
-        # print(move)
+                "variations" : ast.literal_eval(move_variations)["variations"]}
         return move
 
     @staticmethod
     def get_mse(wr_drop):
-        # return (np.square(wr_drop)).mean()
-        return np.array(wr_drop).mean()
+        return (np.array(wr_drop)).mean()
+        # print np.array(wr_drop)
+        # print np.array(wr_drop).mean()
+        # print (np.square(np.array(wr_drop)))
+        # print (np.square(np.array(wr_drop))).mean()
+        # print "-------------------------------"
+        # return (np.square(np.array(wr_drop))).mean()
 
     def get_wr_drop(self):
         self.w_moves = [i for i in range(self.start_move, self.nb_moves + 1) if i % 2 == 0]
@@ -103,17 +114,16 @@ class ASGFAnalyzer:
         self.b_moves = [i for i in range(self.start_move, self.nb_moves + 1) if i % 2 == 1]
         self.b_winrate_drop = [move["wr_drop"] for move in self.moves if move["number"] in self.b_moves]
 
-        # fig.plot(w + b, self.w_winrate_drop + self.b_winrate_drop, self.style_w)
-
 if __name__ == '__main__':
-    dirs, sgfs = get_intersection_sgfs("Z:\sgf_5k\\")
+    # dirs, sgfs = get_intersection_sgfs("Z:\sgf\LeelaZero_100\\")
+    dirs, sgfs = get_asgfs("Z:\\results\\")
     fig = plt
     ranks = list()
     mse_ranks = dict()
     x_by_ranks = dict()
-    for i in range(1, 11):
+    for i in range(1, 16):
         mse_ranks[str(i) + "k"] = list()
-        x_by_ranks[str(i) + "k"] = 11 - i
+        x_by_ranks[str(i) + "k"] = 16 - i
         ranks.append(str(11-i) + "k")
     for i in range(1, 10):
         mse_ranks[str(i) + "d"] = list()
@@ -140,24 +150,22 @@ if __name__ == '__main__':
                 # asgf.set_line_style("rp", "ro")
             # asgf.get_wr_drop(fig)
             if asgf.w_rank != "?":
-                if "10k" in dir:
-                    fig.plot(x_by_ranks[asgf.w_rank], asgf.get_mse(asgf.w_winrate_drop), marker='o', markersize=6, color="blue")
+                # if "10k" in dir or "100" in dir:
+                fig.plot(x_by_ranks[asgf.w_rank], asgf.get_mse(asgf.w_winrate_drop), marker='o', markersize=6, color="blue")
                 if "2k" in dir:
                     fig.plot(x_by_ranks[asgf.w_rank], asgf.get_mse(asgf.w_winrate_drop), marker='*', markersize=6, color="green")
                 if "5k" in dir:
                     fig.plot(x_by_ranks[asgf.w_rank], asgf.get_mse(asgf.w_winrate_drop), marker='p', markersize=6, color="red")
             if asgf.b_rank != "?":
-                if "10k" in dir:
-                    fig.plot(x_by_ranks[asgf.b_rank], asgf.get_mse(asgf.b_winrate_drop), marker='o', markersize=6, color="blue")
+                # if "10k" in dir or "100" in dir:
+                fig.plot(x_by_ranks[asgf.b_rank], asgf.get_mse(asgf.b_winrate_drop), marker='o', markersize=6, color="blue")
                 if "2k" in dir:
                     fig.plot(x_by_ranks[asgf.b_rank], asgf.get_mse(asgf.b_winrate_drop), marker='*', markersize=6, color="green")
                 if "5k" in dir:
                     fig.plot(x_by_ranks[asgf.b_rank], asgf.get_mse(asgf.b_winrate_drop), marker='p', markersize=6, color="red")
             # fig.legend(["10k", "2k", "5k"])
 
-    fig.xticks(range(1, 20), ranks)
-    # fig.legend(["ro", "b*", "gp"], ["10k", "2k", "5k"])
-    # for sgf in mses:
+    fig.xticks(range(1, 25), ranks)
     print mses
 
     fig.show()

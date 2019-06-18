@@ -35,13 +35,6 @@ class GCCException(Exception):
 loglock = threading.Lock()
 
 
-def process_exists(process_name):
-    # print subprocess.check_output('tasklist')
-    printable = set(string.printable)
-    output = filter(lambda x: x in printable, os.popen("tasklist").read())
-    return process_name in output
-
-
 def log(verbose_level, *args):
     global loglock
     if verbose_level <= verbose:
@@ -152,16 +145,16 @@ def write_sgf(filename, sgf_content):
 
         new_file.close()
         filelock.release()
-    except IOError, e:
+    except IOError as err:
         filelock.release()
         log(1, "Could not save the SGF file", filename)
-        log(1, "=>", e.errno, e.strerror)
-        raise GCCException(("Could not save the RSGF file: ") + filename + "\n" + e.strerror)
-    except Exception, e:
+        log(1, "=>", err.errno, err.strerror)
+        raise GCCException("Could not save the RSGF file: " + filename + "\n" + err.strerror)
+    except Exception as err:
         filelock.release()
         log(1, "Could not save the RSGF file", filename)
-        log(1, "=>", e)
-        raise GCCException(("Could not save the SGF file: ") + filename + "\n" + unicode(e))
+        log(1, "=>", err)
+        raise GCCException("Could not save the SGF file: " + filename + "\n" + unicode(err))
 
 
 def convert_sgf_to_utf(content):
@@ -625,10 +618,12 @@ class RunAnalysisBase:
         except IndexError:
             pass
         f = file(str(self.asgf_filename), 'a')
-        fp = file(str(self.asgf_filename_profiled), 'a')
+        if self.asgf_filename != self.asgf_filename_profiled:
+            fp = file(str(self.asgf_filename_profiled), 'a')
         if not skip:
             f.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
-            fp.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
+            if self.asgf_filename != self.asgf_filename_profiled:
+                fp.write("Rank of white: {0}, rank of black: {1} \n".format(self.g.get_player_rank('w'), self.g.get_player_rank('b')))
         lost_percent = 0
         previous_best = 47
         position_evaluation = dict()
@@ -672,22 +667,24 @@ class RunAnalysisBase:
                             str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
                             str(lost_percent), str(previous_position_evaluation)))
                         f.flush()
-                        fp.write('Move #{0}, made by w: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
-                            str(self.current_move - 1),
-                            str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
-                            str(lost_percent), str(previous_position_evaluation)))
-                        fp.flush()
+                        if self.asgf_filename != self.asgf_filename_profiled:
+                            fp.write('Move #{0}, made by w: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
+                                str(self.current_move - 1),
+                                str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
+                                str(lost_percent), str(previous_position_evaluation)))
+                            fp.flush()
                     else:
                         f.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
                             str(self.current_move - 1),
                             str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
                             str(lost_percent), str(previous_position_evaluation)))
                         f.flush()
-                        fp.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
-                            str(self.current_move - 1),
-                            str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
-                            str(lost_percent), str(previous_position_evaluation)))
-                        fp.flush()
+                        if self.asgf_filename != self.asgf_filename_profiled:
+                            fp.write('Move #{0}, made by b: Played at {1}, {2}% in WR. All stats: {3} \n'.format(
+                                str(self.current_move - 1),
+                                str(ij2gtp(go_to_move(self.move_zero, self.current_move - 1).get_move()[1])),
+                                str(lost_percent), str(previous_position_evaluation)))
+                            fp.flush()
 
                 previous_position_evaluation = position_evaluation
                 wrs = [pos['value network win rate'] for pos in position_evaluation['variations']]
@@ -723,7 +720,8 @@ class RunAnalysisBase:
             self.current_move += 1
 
         f.close()
-        fp.close()
+        if self.asgf_filename != self.asgf_filename_profiled:
+            fp.close()
         self.terminate_bot()
         self.close()
         return True
