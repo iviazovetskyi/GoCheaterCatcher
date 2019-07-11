@@ -248,6 +248,8 @@ class Leela_Zero_gtp(GTP):
         self.command_line = command[0] + " " + " ".join(command[1:])
 
         leela_zero_working_directory = command[0][:-len(ntpath.basename(command[0]))]
+        if not leela_zero_working_directory:
+            leela_zero_working_directory = os.getcwd()
         command = [c.encode(sys.getfilesystemencoding()) for c in command]
         leela_zero_working_directory = leela_zero_working_directory.encode(sys.getfilesystemencoding())
         if leela_zero_working_directory:
@@ -289,9 +291,9 @@ class Leela_Zero_gtp(GTP):
                 elif "Weights file is the wrong version." in err_line:
                     log(0, err_line.strip())
                     break
-                elif "BLAS Core:" in err_line:
-                    log(1, "Could not find out, abandoning")
-                    break
+#                elif "BLAS Core:" in err_line:
+#                    log(1, "Could not find out, abandoning")
+#                    break
             except:
                 log(0, "Could not find out, abandoning")
                 break

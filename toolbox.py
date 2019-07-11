@@ -501,7 +501,7 @@ class MasterAnalyze():
             filename_base = os.path.splitext(os.path.basename(filename))[0]
 
             for bot in self.bots:
-                dir_path = os.path.dirname(filename) + "\{0}_{1}\\".format(bot["name"], bot["profile"])
+                dir_path = os.path.dirname(filename) + "/{0}_{1}/".format(bot["name"], bot["profile"])
                 try:
                     os.makedirs(dir_path)
                 except OSError:
@@ -614,7 +614,6 @@ class RunAnalysisBase:
                     contents = f.readlines()
                     if "Rank of white" in contents[0]:
                         skip = True
-                f.close()
         except IndexError:
             pass
         f = file(str(self.asgf_filename), 'a')
@@ -822,7 +821,7 @@ def bot_starting_procedure(bot_name, bot_gtp_name, bot_gtp, sgf_g, profile, sile
 
         if bot_gtp_name != 'GtpBot':
             if answer != bot_gtp_name:
-                raise GCCException("%s did not identify itself as expected:" % bot_name)
+                print("%s != %s" % (answer, bot_gtp_name)) #raise GCCException("%s did not identify itself as expected:" % bot_name)
         else:
             bot_gtp_name = answer
 
